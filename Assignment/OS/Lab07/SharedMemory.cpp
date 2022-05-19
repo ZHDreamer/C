@@ -6,19 +6,15 @@
 #include <sys/wait.h>
 #include <unistd.h>
 #include <cstring>
+#include <random>
 
 using namespace std;
-
-typedef struct {
-    char name[5];
-    int  age;
-} People;
 
 int main() {
     pid_t p;
     p = fork();
     if (p == 0) {
-        key_t key = ftok(".", 4);
+        key_t key = ftok(".", 3);
         int   shmid = shmget(key, 1024, IPC_CREAT | 0666);
 
         if (shmid == -1) {
@@ -26,21 +22,21 @@ int main() {
             return -1;
         }
         void*  addr = shmat(shmid, NULL, SHM_W);
-        sleep(10);
-        People p = {"zmh", 20};
-        memcpy(addr, &p, sizeof(People));
+        random_device rd;
+        unsigned int random = rd();
+        memcpy(addr, &random, sizeof(random));
+        cout << "write random number: " << random << endl;
         shmdt(addr);
     }
     else if (p > 0) {
-        key_t key = ftok(".", 4);
+        key_t key = ftok(".", 3);
         int shmid = shmget(key, 1024, IPC_EXCL);
         void * addr = shmat(shmid, NULL, SHM_W);
 
-        People * p = (People*)malloc(sizeof(People));
-        // waitpid(-1, NULL, 0);
-        memcpy(p, addr, sizeof(People));
-        cout << "name = " << p->name << endl;
-        cout << "age = " << p->age << endl;
+        unsigned int random;
+        waitpid(-1, NULL, 0);
+        memcpy(&random, addr, sizeof(random));
+        cout << "read random number: " << random << endl;
         shmdt(addr);
     }
     return 0;
