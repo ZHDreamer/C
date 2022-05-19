@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <cstdlib>
 #include <fcntl.h>
 #include <iostream>
@@ -18,12 +19,6 @@ using namespace std;
 //     short          sem_op;   // semaphore operation
 //     short          sem_flg;  // operation flags
 // };
-
-union semun {
-    int              val;
-    struct semid_ds* buf;
-    unsigned short*  arry;
-};
 
 int sem_init(int value) {
     int sem_id = semget(IPC_PRIVATE, 1, 0666 | IPC_CREAT);
@@ -55,13 +50,13 @@ void P(int sem_id) {
 }
 
 void V(int sem_id) {
-    struct sembuf* sem_v = (struct sembuf*)malloc(sizeof(struct sembuf));
+    struct sembuf sem_v;
 
-    sem_v->sem_flg = SEM_UNDO;
-    sem_v->sem_num = 0;
-    sem_v->sem_op = 1;
+    sem_v.sem_flg = SEM_UNDO;
+    sem_v.sem_num = 0;
+    sem_v.sem_op = 1;
 
-    if (semop(sem_id, sem_v, 1) == -1) {
+    if (semop(sem_id, &sem_v, 1) == -1) {
         cout << "V error" << endl;
     }
 }
@@ -81,9 +76,8 @@ int main() {
             cout << "consumer A  current number " << get_sem(fullid) << endl;
             V(emptyid);
             V(mutxid);
-            sleep(2);
+            sleep(3);
         }
-        sleep(3);
     }
     else if (consumer1 > 0) {
         pid_t consumer2 = fork();
@@ -95,9 +89,9 @@ int main() {
                      << endl;
                 V(emptyid);
                 V(mutxid);
-                sleep(3);
+                sleep(2);
             }
-            sleep(2);
+            sleep(3);
         }
         else if (consumer2 > 0) {
             for (int i = 0; i < NUM; i++) {
@@ -109,7 +103,7 @@ int main() {
                 V(mutxid);
                 sleep(1);
             }
-            while (wait(0) != -1) {}
+            while (wait(NULL) != -1) {}
 
             del_sem(fullid);
             del_sem(emptyid);

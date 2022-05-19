@@ -20,7 +20,6 @@ int main() {
         if (pid > 0) {
             fd = open(FIFO_SERVER, O_RDONLY);
             char buf[80];
-            cout << "The data of buffer: " << buf << endl;
             read(fd, buf, sizeof(buf));
             cout << "The message from the pipe is: " << buf << endl;
             close(fd);
