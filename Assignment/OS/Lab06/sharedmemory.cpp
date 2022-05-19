@@ -25,10 +25,10 @@ union semun {
     unsigned short*  arry;
 };
 
-int sem_init(key_t key, int value) {
-    int sem_id = semget(key, 1, 0666 | IPC_CREAT);
+int sem_init(int value) {
+    int sem_id = semget(IPC_PRIVATE, 1, 0666 | IPC_CREAT);
     if (semctl(sem_id, 0, SETVAL, value) == -1) {
-        cout << "sem init error " << key << endl;
+        cout << "sem init error " << endl;
     }
     return sem_id;
 }
@@ -69,56 +69,51 @@ void V(int sem_id) {
 int main() {
     int fullid, emptyid, mutxid;
     // init semaphore
-    fullid = sem_init(2, 0);
-    emptyid = sem_init(3, MAXSEM);
-    mutxid = sem_init(4, 1);
+    fullid = sem_init(0);
+    emptyid = sem_init(MAXSEM);
+    mutxid = sem_init(1);
 
-    pid_t producer = fork();
-    if (producer == 0) {
-        for (int i = 0; i < NUM; i++) {
-            P(emptyid);
+    pid_t consumer1 = fork();
+    if (consumer1 == 0) {
+        for (int i = 0; i < NUM / 2; i++) {
+            P(fullid);
             P(mutxid);
-            cout << "producer  produced number " << get_sem(fullid) + 1 << endl;
-            V(fullid);
+            cout << "consumer A  current number " << get_sem(fullid) << endl;
+            V(emptyid);
             V(mutxid);
-            sleep(1);
+            sleep(2);
         }
-        sleep(5);
+        sleep(3);
     }
-    else {
-        pid_t consumer1 = fork();
-        if (consumer1 == 0) {
+    else if (consumer1 > 0) {
+        pid_t consumer2 = fork();
+        if (consumer2 == 0) {
             for (int i = 0; i < NUM / 2; i++) {
                 P(fullid);
                 P(mutxid);
-                cout << "consumer A  current number " << get_sem(fullid)
+                cout << "consumer B  current number " << get_sem(fullid)
                      << endl;
                 V(emptyid);
                 V(mutxid);
-                sleep(2);
+                sleep(3);
             }
-            sleep(3);
+            sleep(2);
         }
-        else if (consumer1 > 0) {
-            pid_t consumer2 = fork();
-            if (consumer2 == 0) {
-                for (int i = 0; i < NUM / 2; i++) {
-                    P(fullid);
-                    P(mutxid);
-                    cout << "consumer B  current number " << get_sem(fullid)
-                         << endl;
-                    V(emptyid);
-                    V(mutxid);
-                    sleep(3);
-                }
+        else if (consumer2 > 0) {
+            for (int i = 0; i < NUM; i++) {
+                P(emptyid);
+                P(mutxid);
+                cout << "producer  produced number " << get_sem(fullid) + 1
+                     << endl;
+                V(fullid);
+                V(mutxid);
+                sleep(1);
             }
-            else if (consumer2 > 0) {
-                while (wait(0) != -1);
+            while (wait(0) != -1) {}
 
-                del_sem(fullid);
-                del_sem(emptyid);
-                del_sem(mutxid);
-            }
+            del_sem(fullid);
+            del_sem(emptyid);
+            del_sem(mutxid);
         }
     }
     return 0;
