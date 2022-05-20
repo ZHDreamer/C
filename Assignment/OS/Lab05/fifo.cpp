@@ -23,7 +23,7 @@ int main() {
             read(fd, buf, sizeof(buf));
             cout << "The message from the pipe is: " << buf << endl;
             close(fd);
-            cout << "father close the fifo successfully"<< endl;
+            cout << "father close the fifo successfully" << endl;
         }
         else if (pid == 0) {
             char buf[] = "fifo test";

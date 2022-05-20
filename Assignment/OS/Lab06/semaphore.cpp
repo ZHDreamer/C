@@ -1,3 +1,4 @@
+#include <csignal>
 #include <cstddef>
 #include <cstdlib>
 #include <fcntl.h>
@@ -12,7 +13,7 @@
 using namespace std;
 
 #define MAXSEM 5
-#define NUM 10
+#define NUM 12
 
 // struct sembuf {
 //     unsigned short sem_num;  // semaphore number
@@ -70,28 +71,27 @@ int main() {
 
     pid_t consumer1 = fork();
     if (consumer1 == 0) {
-        for (int i = 0; i < NUM / 2; i++) {
+        while (true) {
             P(fullid);
             P(mutxid);
             cout << "consumer A  current number " << get_sem(fullid) << endl;
             V(emptyid);
             V(mutxid);
-            sleep(3);
+            sleep(5);
         }
     }
     else if (consumer1 > 0) {
         pid_t consumer2 = fork();
         if (consumer2 == 0) {
-            for (int i = 0; i < NUM / 2; i++) {
+            while (true) {
                 P(fullid);
                 P(mutxid);
                 cout << "consumer B  current number " << get_sem(fullid)
                      << endl;
                 V(emptyid);
                 V(mutxid);
-                sleep(2);
+                sleep(4);
             }
-            sleep(3);
         }
         else if (consumer2 > 0) {
             for (int i = 0; i < NUM; i++) {
@@ -103,7 +103,15 @@ int main() {
                 V(mutxid);
                 sleep(1);
             }
-            while (wait(NULL) != -1) {}
+            while (true) {
+                P(mutxid);
+                if (get_sem(emptyid) == MAXSEM) {
+                    break;
+                }
+                V(mutxid);
+            }
+            kill(consumer1, SIGKILL);
+            kill(consumer2, SIGKILL);
 
             del_sem(fullid);
             del_sem(emptyid);

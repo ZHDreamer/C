@@ -16,7 +16,7 @@ int main() {
         FILE* fp;
         fp = fopen(s, "r");
         char buf[100] = {0};
-        for (int i=0; !feof(fp); i++) {
+        for (int i = 0; !feof(fp); i++) {
             fscanf(fp, "%c", &buf[i]);
         }
         printf("%s\n", buf);
