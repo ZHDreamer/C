@@ -5,11 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Debug C++",
             "type": "lldb",
             "request": "launch",
             "preLaunchTask": "Build C++",
-            "name": "Debug",
-            "program": "${workspaceFolder}/a.out",
+            "windows": {
+                "program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.exe"
+            },
+            "linux": {
+                "program": "${workspaceFolder}/bin/${fileBasenameNoExtension}.out"
+            },
+            "program": "",
             "args": [],
             "cwd": "${fileDirname}",
             "terminal": "integrated",
