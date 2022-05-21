@@ -1,5 +1,5 @@
-#include <cstdio>
 #include <signal.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <wait.h>
 

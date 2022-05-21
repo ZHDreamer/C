@@ -1,12 +1,8 @@
-#include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <random>
-#include <sys/ipc.h>
+#include <stdio.h>
 #include <sys/shm.h>
-#include <sys/types.h>
 #include <sys/wait.h>
-#include <unistd.h>
 
 using namespace std;
 
@@ -16,7 +12,7 @@ int main() {
     key_t key = ftok(".", 3);
     int   shmid = shmget(key, 1024, IPC_CREAT | 0666);
     if (shmid == -1) {
-        cout << "shmget error" << endl;
+        printf("shmget error\n");
         return -1;
     }
     void* addr = shmat(shmid, NULL, SHM_R);
@@ -24,14 +20,14 @@ int main() {
         random_device rd;
         unsigned int  random = rd();
         memcpy(addr, &random, sizeof(random));
-        cout << "write random number: " << random << endl;
+        printf("write random number: %d\n", random);
         shmdt(addr);
     }
     else if (p > 0) {
         unsigned int random;
         waitpid(-1, NULL, 0);
         memcpy(&random, addr, sizeof(random));
-        cout << "read random number: " << random << endl;
+        printf("read random number: %d\n", random);
         shmdt(addr);
     }
     return 0;

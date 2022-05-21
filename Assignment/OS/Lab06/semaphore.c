@@ -1,16 +1,7 @@
-#include <csignal>
-#include <cstddef>
-#include <cstdlib>
-#include <fcntl.h>
-#include <iostream>
-#include <stdlib.h>
-#include <sys/ipc.h>
+#include <stdio.h>
 #include <sys/sem.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-using namespace std;
 
 #define MAXSEM 5
 #define NUM 12
@@ -24,7 +15,7 @@ using namespace std;
 int sem_init(int value) {
     int sem_id = semget(IPC_PRIVATE, 1, 0666 | IPC_CREAT);
     if (semctl(sem_id, 0, SETVAL, value) == -1) {
-        cout << "sem init error " << endl;
+        printf("sem init error\n");
     }
     return sem_id;
 }
@@ -46,7 +37,7 @@ void P(int sem_id) {
     sem_p.sem_op = -1;
 
     if (semop(sem_id, &sem_p, 1) == -1) {
-        cout << "P error" << endl;
+        printf("P error\n");
     }
 }
 
@@ -58,7 +49,7 @@ void V(int sem_id) {
     sem_v.sem_op = 1;
 
     if (semop(sem_id, &sem_v, 1) == -1) {
-        cout << "V error" << endl;
+        printf("V error\n");
     }
 }
 
@@ -71,10 +62,10 @@ int main() {
 
     pid_t consumer1 = fork();
     if (consumer1 == 0) {
-        while (true) {
+        while (1) {
             P(fullid);
             P(mutxid);
-            cout << "consumer A  current number " << get_sem(fullid) << endl;
+            printf("consumer A current number %d\n", get_sem(fullid));
             V(emptyid);
             V(mutxid);
             sleep(5);
@@ -83,11 +74,10 @@ int main() {
     else if (consumer1 > 0) {
         pid_t consumer2 = fork();
         if (consumer2 == 0) {
-            while (true) {
+            while (1) {
                 P(fullid);
                 P(mutxid);
-                cout << "consumer B  current number " << get_sem(fullid)
-                     << endl;
+                printf("consumer B current number %d\n", get_sem(fullid));
                 V(emptyid);
                 V(mutxid);
                 sleep(4);
@@ -97,13 +87,12 @@ int main() {
             for (int i = 0; i < NUM; i++) {
                 P(emptyid);
                 P(mutxid);
-                cout << "producer  produced number " << get_sem(fullid) + 1
-                     << endl;
+                printf("producer prosuced number %d\n", get_sem(fullid) + 1);
                 V(fullid);
                 V(mutxid);
                 sleep(1);
             }
-            while (true) {
+            while (1) {
                 P(mutxid);
                 if (get_sem(emptyid) == MAXSEM) {
                     break;

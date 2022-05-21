@@ -1,11 +1,8 @@
 #include <fcntl.h>
-#include <iostream>
+#include <stdio.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-using namespace std;
 
 #define FIFO_SERVER "fifoserver"
 
@@ -21,20 +18,20 @@ int main() {
             fd = open(FIFO_SERVER, O_RDONLY);
             char buf[80];
             read(fd, buf, sizeof(buf));
-            cout << "The message from the pipe is: " << buf << endl;
+            printf("The message from the pipe is: %s\n", buf);
             close(fd);
-            cout << "father close the fifo successfully" << endl;
+            printf("father close the fifo successfully\n");
         }
         else if (pid == 0) {
             char buf[] = "fifo test";
             fd = open(FIFO_SERVER, O_WRONLY);
-            cout << "child write success!" << endl;
+            printf("child write success!\n");
             write(fd, buf, sizeof(buf));
             close(fd);
-            cout << "child close the fifo successfully" << endl;
+            printf("child close the fifo successfully\n");
         }
         else {
-            cout << "fork error" << endl;
+            printf("fork error\n");
         }
         return 0;
     }
